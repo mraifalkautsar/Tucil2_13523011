@@ -1,9 +1,6 @@
 # Kompres Dulu Pake QuadTree!
 
-
-<p align="center">
-  <img src="https://github.com/user-attachments/assets/c0d8c441-8a26-4711-9bb7-79e9f871caf7" alt="mediumsize_SSIM"/>
-</p>
+![smallsize_SSIM](https://github.com/user-attachments/assets/f8c2571a-b57f-41d9-af80-95c202b5b64e)
 
 ## 📷 Deskripsi Singkat
 
