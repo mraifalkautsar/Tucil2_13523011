@@ -1,9 +1,6 @@
 #include "utils.hpp"
 
-int toGray(const Color& c) {
-    return (c.r + c.g + c.b) / 3;
-}
-
+/* Menghitung error SSIM */
 static double compute_ssim_error_for_block(const Image& image, int startX, int startY, int blockWidth, int blockHeight) {
     int count = blockWidth * blockHeight;
     double sumR = 0.0, sumG = 0.0, sumB = 0.0;
@@ -32,21 +29,22 @@ static double compute_ssim_error_for_block(const Image& image, int startX, int s
     varG /= count;
     varB /= count;
     
-    // Constants for SSIM for 8-bit images
-    const double C1 = (0.01 * 255) * (0.01 * 255); // ≈6.5025 (will cancel out)
-    const double C2 = (0.03 * 255) * (0.03 * 255); // ≈58.5225
+    // Constants SSIM untuk gambar 8-bit
+    const double C1 = (0.01 * 255) * (0.01 * 255); // ≈ 6.5025 
+    const double C2 = (0.03 * 255) * (0.03 * 255); // ≈ 58.5225
 
-    // For a uniform block (compressed block), μ_y equals μ_x and variance is 0.
-    // Thus, SSIM per channel simplifies to:
+    // Untuk sebuah blok seragam (blok terkompresi), μ_y sama dengan μ_x dan variansinya adalah 0.
+    // Oleh karena itu, SSIM tiap channel dapat disederahanakan menjadi:
     // SSIM_c = (2 μ_x^2 + C1)*(C2) / ((2 μ_x^2 + C1)*(σ_x^2 + C2)) = C2 / (σ_x^2 + C2)
     double ssimR = C2 / (varR + C2);
     double ssimG = C2 / (varG + C2);
     double ssimB = C2 / (varB + C2);
     double ssim = (ssimR + ssimG + ssimB) / 3.0;
-    // Error is defined as 1 - SSIM.
+    // Error didefinisikan sebagai 1 - SSIM.
     return 1.0 - ssim;
 }
 
+/* Menghitung error untuk variansi, MAD, max pixel difference, dan entropi */
 double compute_block_error(const Image& image, int startX, int startY, int blockWidth, int blockHeight, int errorChoice) {
     int imageHeight = static_cast<int>(image.size());
     if (imageHeight == 0) return 0.0;
@@ -67,7 +65,7 @@ double compute_block_error(const Image& image, int startX, int startY, int block
     pixelsR.reserve(N);
     pixelsG.reserve(N);
     pixelsB.reserve(N);
-    
+
     for (int yy = startY; yy < startY + blockHeight; ++yy) {
         for (int xx = startX; xx < startX + blockWidth; ++xx) {
             const Color& c = image[yy][xx];
@@ -134,6 +132,7 @@ double compute_block_error(const Image& image, int startX, int startY, int block
     return (errorR + errorG + errorB) / 3.0;
 }
 
+/* Menghitung rerata warna dari suatu blok*/
 Color compute_average_color(const Image& image, int startX, int startY, int blockWidth, int blockHeight) {
     long long sumR = 0, sumG = 0, sumB = 0, sumA = 0;
     int count = blockWidth * blockHeight;
@@ -154,6 +153,7 @@ Color compute_average_color(const Image& image, int startX, int startY, int bloc
     return avg;
 }
 
+/* Konversi data gambar menjadi array RGBA */
 std::vector<unsigned char> convert_image_to_RGBA(const Image& image) {
     int height = image.size();
     int width = (height > 0) ? image[0].size() : 0;
@@ -171,7 +171,7 @@ std::vector<unsigned char> convert_image_to_RGBA(const Image& image) {
     return buffer;
 }
 
-// Helper to get file extension in lowercase.
+/* Fungsi pembantu untuk memperoleh ekstensi */
 std::string get_extension(const std::string& filename) {
     size_t pos = filename.find_last_of('.');
     if (pos == std::string::npos) return "";
@@ -182,6 +182,7 @@ std::string get_extension(const std::string& filename) {
     return ext;
 }
 
+/* Fungsi pembantu untuk load image */
 Image load_image_rgba(const std::string& filename) {
     int width, height, channels;
     unsigned char* data = stbi_load(filename.c_str(), &width, &height, &channels, STBI_rgb_alpha);
@@ -206,4 +207,3 @@ Image load_image_rgba(const std::string& filename) {
               << " (width=" << width << ", height=" << height << ", forced RGBA)\n";
     return img;
 }
-

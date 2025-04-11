@@ -2,14 +2,14 @@
 #include "utils.hpp"
 #include <iostream>
 
-// Define the global gifFrames vector.
+/* Vektor untuk frames GIF */
 std::vector<Image> gifFrames;
-
-// Define the capture_frame helper.
+/* Fungsi untuk penangkapan frame GIF */
 void capture_frame(const Image& img) {
     gifFrames.push_back(img);
 }
 
+/* Konstruktor untuk QuadTreeNode */
 QuadTreeNode::QuadTreeNode(int _x, int _y, int _width, int _height)
     : x(_x), y(_y), width(_width), height(_height),
       is_leaf(false),
@@ -19,6 +19,7 @@ QuadTreeNode::QuadTreeNode(int _x, int _y, int _width, int _height)
     color = {0, 0, 0, 255};
 }
 
+/* Destruktor untuk QuadTreeNode */
 QuadTreeNode::~QuadTreeNode() {
     delete top_left_child;
     delete top_right_child;
@@ -26,6 +27,7 @@ QuadTreeNode::~QuadTreeNode() {
     delete bottom_right_child;
 }
 
+/* Melakukan pembagian terhadap QuadTreeNode berdasarkan threshold dan min_block_size */
 void QuadTreeNode::divide_node(const Image& image, int error_choice, double threshold, int min_block_size) {
     double error = compute_block_error(image, x, y, width, height, error_choice);
     if ((error > threshold) && (width > min_block_size) && (height > min_block_size)) {
@@ -49,24 +51,25 @@ void QuadTreeNode::divide_node(const Image& image, int error_choice, double thre
     }
 }
 
-void QuadTreeNode::draw_node(Image& result_image, bool gif_mode) {
+/* Penggambaran node untuk mode cepat */
+void QuadTreeNode::draw_node_fast(Image& result_image) {
     if (is_leaf) {
+        // Mengisi semua pixel dalam area ini dengan warna
         for (int row = y; row < y + height; ++row) {
             for (int col = x; col < x + width; ++col) {
                 result_image[row][col] = color;
             }
         }
-        if (gif_mode) {
-            capture_frame(result_image);
-        }
     } else {
-        if (top_left_child)    top_left_child->draw_node(result_image, gif_mode);
-        if (top_right_child)   top_right_child->draw_node(result_image, gif_mode);
-        if (bottom_left_child) bottom_left_child->draw_node(result_image, gif_mode);
-        if (bottom_right_child) bottom_right_child->draw_node(result_image, gif_mode);
+        // Rekursi
+        if (top_left_child)    top_left_child->draw_node_fast(result_image);
+        if (top_right_child)   top_right_child->draw_node_fast(result_image);
+        if (bottom_left_child) bottom_left_child->draw_node_fast(result_image);
+        if (bottom_right_child) bottom_right_child->draw_node_fast(result_image);
     }
 }
 
+/* Penggambaran node untuk mode gradual GIF */
 void QuadTreeNode::draw_node_at_depth(Image& result_image, int currentDepth, int maxDepth) {
     if (currentDepth >= maxDepth || is_leaf) {
         for (int row = y; row < y + height; ++row) {
@@ -82,6 +85,7 @@ void QuadTreeNode::draw_node_at_depth(Image& result_image, int currentDepth, int
     if (bottom_right_child) bottom_right_child->draw_node_at_depth(result_image, currentDepth + 1, maxDepth);
 }
 
+/* Menghitung jumlah daun dari suatu QuadTreeNode */
 int QuadTreeNode::count_leaves() const {
     if (is_leaf)
         return 1;
@@ -90,5 +94,37 @@ int QuadTreeNode::count_leaves() const {
     if (top_right_child)   count += top_right_child->count_leaves();
     if (bottom_left_child) count += bottom_left_child->count_leaves();
     if (bottom_right_child)count += bottom_right_child->count_leaves();
+    return count;
+}
+
+/* Menghitung kedalaman maksimal dari suatu QuadTreeNode */
+int QuadTreeNode::max_depth() const {
+    if (is_leaf)
+        return 0;
+    int depthTL = top_left_child ? top_left_child->max_depth() : 0;
+    int depthTR = top_right_child ? top_right_child->max_depth() : 0;
+    int depthBL = bottom_left_child ? bottom_left_child->max_depth() : 0;
+    int depthBR = bottom_right_child ? bottom_right_child->max_depth() : 0;
+    return 1 + std::max({depthTL, depthTR, depthBL, depthBR});
+}
+
+/* Menghitung kedalaman dari suatu QuadTreeNode */
+int QuadTreeNode::get_depth() const {
+    if (is_leaf)
+        return 1;
+    int depthTL = top_left_child ? top_left_child->max_depth() : 0;
+    int depthTR = top_right_child ? top_right_child->max_depth() : 0;
+    int depthBL = bottom_left_child ? bottom_left_child->max_depth() : 0;
+    int depthBR = bottom_right_child ? bottom_right_child->max_depth() : 0;
+    return 1 + std::max({depthTL, depthTR, depthBL, depthBR});
+}
+
+/* Menghitung jumlah dari suatu QuadTreeNode */
+int QuadTreeNode::get_node_count() const {
+    int count = 1; // node ini
+    if (top_left_child)    count += top_left_child->get_node_count();
+    if (top_right_child)   count += top_right_child->get_node_count();
+    if (bottom_left_child) count += bottom_left_child->get_node_count();
+    if (bottom_right_child) count += bottom_right_child->get_node_count();
     return count;
 }

@@ -9,11 +9,8 @@
 #include <string>
 #include <cctype>
 
-#define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
-#define STB_IMAGE_WRITE_IMPLEMENTATION
 #include "stb_image_write.h"
-
 
 struct Color {
     int r, g, b;
@@ -22,21 +19,19 @@ struct Color {
 
 typedef std::vector<std::vector<Color>> Image;
 
-// Convert a Color to grayscale
-int toGray(const Color& c);
-
-// Compute block error using different methods.
-// errorChoice: 1=Variance, 2=MAD, 3=MaxDiff, 4=Entropy, 5=SSIM (simplified)
+/* Menghitung error untuk variansi, MAD, max pixel difference, dan entropi */
 double compute_block_error(const Image& image, int startX, int startY, int blockWidth, int blockHeight, int errorChoice);
 
-// Compute the average color of a block.
+/* Menghitung rerata warna dari suatu blok*/
 Color compute_average_color(const Image& image, int startX, int startY, int blockWidth, int blockHeight);
 
-// Convert an Image (2D vector) to a flat RGBA buffer.
+/* Konversi data gambar menjadi array RGBA */
 std::vector<unsigned char> convert_image_to_RGBA(const Image& image);
 
+/* Fungsi pembantu untuk load image */
 Image load_image_rgba(const std::string& filename);
 
+/* Fungsi pembantu untuk memperoleh ekstensi */
 std::string get_extension(const std::string& filename);
 
 #endif
